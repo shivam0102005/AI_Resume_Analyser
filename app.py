@@ -44,7 +44,7 @@ if resume_file and jd_text:
 
     csv = report_df.to_csv(index=False).encode('utf-8')
     st.download_button(
-        "Download Report",
+        "Download Report"
         csv,
         "resume_analysis_report.csv",
         "text/csv"
