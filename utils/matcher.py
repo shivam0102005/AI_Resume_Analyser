@@ -1,8 +1,24 @@
-from sklearn.feature_extraction.text import TfidfVectorizer
-from sklearn.metrics.pairwise import cosine_similarity
+import math
+import re
+
+def tokenize(text):
+    return re.findall(r'\w+', text.lower())
 
 def calculate_match(resume, jd):
-    tfidf = TfidfVectorizer(stop_words="english")
-    tfidf_matrix = tfidf.fit_transform([resume, jd])
-    score = cosine_similarity(tfidf_matrix[0:1], tfidf_matrix[1:2])
-    return round(score[0][0] * 100, 2)
+    res_tokens = tokenize(resume)
+    jd_tokens = tokenize(jd)
+    
+    # Create frequency map of all unique words
+    all_words = set(res_tokens).union(set(jd_tokens))
+    res_vec = {word: res_tokens.count(word) for word in all_words}
+    jd_vec = {word: jd_tokens.count(word) for word in all_words}
+    
+    # Cosine Similarity Math: (A.B) / (|A|*|B|)
+    dot_product = sum(res_vec[word] * jd_vec[word] for word in all_words)
+    res_mag = math.sqrt(sum(val**2 for val in res_vec.values()))
+    jd_mag = math.sqrt(sum(val**2 for val in jd_vec.values()))
+    
+    if not res_mag or not jd_mag:
+        return 0.0
+        
+    return round((dot_product / (res_mag * jd_mag)) * 100, 2)2)
