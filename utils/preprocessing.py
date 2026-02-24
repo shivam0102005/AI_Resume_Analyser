@@ -95,30 +95,41 @@ def parse_simple_date(date_str):
     return None
 
 import re
+from datetime import datetime
 
 def extract_experience(text):
-    text = text.lower()
-    
-    # 1. Check for Years (e.g., "2 years", "3 yrs")
-    year_matches = re.findall(r'(\d+)\s*(?:year|yr)s?', text)
-    
-    # 2. Check for Months (e.g., "6 months", "1 month")
-    month_matches = re.findall(r'(\d+)\s*month', text)
-    
-    total_years = 0
-    
-    if year_matches:
-        # Take the highest year mentioned
-        total_years = max([int(y) for y in year_matches])
-        
-    if month_matches:
-        # Convert months to years (e.g., 1 month = 0.08 years)
-        max_months = max([int(m) for m in month_matches])
-        month_contribution = max_months / 12
-        
-        # If no years were found, just use the month fraction
-        if total_years == 0:
-            total_years = month_contribution
-            
-    return round(total_years, 2)
 
+    text_lower = text.lower()
+
+    # Only consider experience-related sections
+    if "work experience" not in text_lower and "experience" not in text_lower:
+        return 0
+
+    # Extract only part after "experience"
+    split_text = re.split(r'work experience|experience', text_lower)
+    if len(split_text) > 1:
+        section = split_text[1]
+    else:
+        section = text_lower
+
+    # Stop at education
+    section = re.split(r'education|skills|projects', section)[0]
+
+    # Detect year ranges
+    range_pattern = r'(20\d{2})\s*(?:-|to|–)\s*(20\d{2}|present|current|now)'
+    matches = re.findall(range_pattern, section)
+
+    total_years = 0
+
+    for start, end in matches:
+        start = int(start)
+
+        if end in ["present", "current", "now"]:
+            end = datetime.now().year
+        else:
+            end = int(end)
+
+        if end > start:
+            total_years += (end - start)
+
+    return total_years
